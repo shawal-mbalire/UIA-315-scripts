@@ -26,6 +26,13 @@ public class Enemy : MonoBehaviour
 
     [Header("Enemy animation and spark effect")]
     public Animator anim;
+    public ParticleSystem muzzleSpark;
+
+
+    [Header("Sound Effects")]
+    public AudioSource audioSource;
+    public AudioClip shootingSound;
+
 
     [Header("Enemy States")]
     public float visionRadius;
@@ -33,6 +40,9 @@ public class Enemy : MonoBehaviour
     public bool playerInvisionRadius;
     public bool playerInshootingRadius;
     public bool isPlayer = false;
+
+    public ScoreManager scoreManager;
+
     private void Awake() {
         enemyAgent = GetComponent<NavMeshAgent>();
         presentHealth = enemyHealth;
@@ -67,6 +77,10 @@ public class Enemy : MonoBehaviour
         transform.LookAt(LookPoint);
         if(!previuoslyShoot)
         {
+
+            muzzleSpark.play();
+            audioSource.PlayOneShot(shootingSound);
+
             RaycastHit hit;
             if(Physics.Raycast(ShootingRayCastArea.transform.position, ShootingRayCastArea.transform.forward, out hit, shootindRadius))
             {
@@ -88,13 +102,12 @@ public class Enemy : MonoBehaviour
                         playerBody.PlayerAIHitDamage(giveDamage);
                     }
                 }
-
+                anim.SetBool("Running", false);
+                anim.SetBool("Shooting", true);
             }
-            anim.SetBool("Running", false);
-            anim.SetBool("Shooting", true);
+            previuoslyShoot = true;
+            Invoke(nameof(ActiveShooting),timebtwShoot);
         }
-        previuoslyShoot = true;
-        Invoke(nameof(ActiveShooting),timebtwShoot);
 
     }
     private void ActiveShooting()
@@ -126,8 +139,15 @@ public class Enemy : MonoBehaviour
         //animations
 
         Debug.Log("Dead");
+
+        gameObject.GetComponent<CapsuleCollider>().enabled = false;
+        scoreManager.kills += 1;
+
         yield return new WaitForSeconds(5f);
+
         Debug.Log("Spawn");
+        gameObject.GetComponent<CapsuleCollider>().enabled = true;
+
         presentHealth=120f;
         enemySpeed = 1f;
         shootingRadius = 10f;

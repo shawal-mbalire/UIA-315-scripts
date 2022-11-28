@@ -27,6 +27,7 @@ public class PlayerAI : MonoBehaviour
 
     [Header("Player animation and spark effect")]
     public Animator anim;
+    public ParticleSystem muzzleSpark;
 
     [Header("Player States")]
     public float visionRadius;
@@ -34,6 +35,13 @@ public class PlayerAI : MonoBehaviour
     public bool enemyInvisionRadius;
     public bool enemyInshootingRadius;
     public bool isPlayer = false;
+
+    [Header("Sound Effects")]
+    public AudioSource audioSource;
+    public AudioClip shootingSound;
+
+    public ScoreManager scoreManager;
+
     private void Awake() {
         PlayerAgent = GetComponent<NavMeshAgent>();
         presentHealth = PlayerHealth;
@@ -68,6 +76,10 @@ public class PlayerAI : MonoBehaviour
         transform.LookAt(LookPoint);
         if(!previuoslyShoot)
         {
+
+            muzzleSpark.Play();
+            audioSource.PlayOneShot (shootingSound);
+
             RaycastHit hit;
             if(Physics.Raycast(ShootingRayCastArea.transform.position, ShootingRayCastArea.transform.forward, out hit, shootindRadius))
             {
@@ -78,13 +90,12 @@ public class PlayerAI : MonoBehaviour
                 {
                     enemy.enemyHitDamage(giveDamage);
                 }
+                anim.SetBool("Running", false);
+                anim.SetBool("Shooting", true);
             }
-            anim.SetBool("Running", false);
-            anim.SetBool("Shooting", true);
+            previuoslyShoot = true;
+            Invoke(nameof(ActiveShooting),timebtwShoot);
         }
-        previuoslyShoot = true;
-        Invoke(nameof(ActiveShooting),timebtwShoot);
-
     }
     private void ActiveShooting()
     {
@@ -115,6 +126,8 @@ public class PlayerAI : MonoBehaviour
         //animations
 
         Debug.Log("Dead");
+        scoreManager.enemykills += 1;
+
         yield return new WaitForSeconds(5f);
         Debug.Log("Spawn");
         presentHealth=120f;

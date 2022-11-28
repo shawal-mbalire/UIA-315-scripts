@@ -26,6 +26,12 @@ public class Rifle : MonoBehaviour
     public GameObject WoodedEffect;
     public GameObject goreEffect;
 
+    [Header("Sound Effects")]
+    public AudioSource audioSource;
+    public AudioClip shootingSound;
+    public Audioclip realodingSound;
+
+
     void Shoot()
     {
         RaycastHit hitInfo;
@@ -76,7 +82,13 @@ public class Rifle : MonoBehaviour
         {
             mag --;
         }
+
+        //update ui
+        AmmoCount.occurrence.UpdateAmmoText(presentAmmunition);
+        AmmoCount.occurrence.UpdateMagText(mag);
+
         muzzleSpark.Play();
+        audioSource.PlayOneShot (shootingSound);
         RaycastHit hitInfo;
 
         if(Physics.Raycast(cam.transform.position, cam.transform.forward, out hitInfo, shootingRange))
@@ -111,6 +123,7 @@ public class Rifle : MonoBehaviour
 
         //animation and audio
         animator.SetBool("Reloading",true);
+        audioSource.PlayOneShot (realodingSound);
         yield return new WaitForSeconds(reloadingTime);
 
         //animations
